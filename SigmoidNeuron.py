@@ -87,20 +87,37 @@ class SigmoidNeuron:
         self.weights = weights
         
     def activity_level(self):
-        if self.weights == False:
+        if self.weights == False: #we put this to false because we dont want it to calcule the first layer because it was already given in the input. 
             return 0
         else:
             return 1/(1+math.exp(-sum(self.weights))) #the reason we put -sum and not -x because it is a vector and we need the sum of the weights instead of the sum of one weight
         
 
-
+# create an Integrate and Fire Neuron class  that is similar to theSigmoid neuron. IF also takes weights but also has a threshold and for the activity level, it calculates the sum of these weights and see if they pass the threshold. 
+class IntergrateFireNeuron:
+    def __init__(self, weights, threshold):
+        self.weights = weights 
+        self.threshold = threshold
+        
+    def activity_level(self):
+        if self.weights == False:
+            return 0
+        else:
+            if sum(self.weights) >= self.threshold:
+                return 1
+            
+            else:
+                return 0 
+        
+## Add IF into the layer 
 
 class Layer:
-    def __init__(self, number_of_neurons, weights):
+    def __init__(self, number_of_neurons, weights, neuron_threshold):
         self. number_of_neurons = number_of_neurons
         self.neurons = []
         self.weights = weights
         self.layer_activation = []
+        self.neuron_threshold = neuron_threshold
       
     def create_neurons(self):
         
@@ -108,9 +125,12 @@ class Layer:
         for n in range(0, self.number_of_neurons):
             if self.weights == False:
                 neuron_weight = False
+                specific_neuron_thresh = False
             else:
                 neuron_weight = self.weights[n]
-            neuron = SigmoidNeuron(neuron_weight) # here we are creating a neuron 
+                specific_neuron_thresh = self.neuron_threshold[n]
+            #neuron = SigmoidNeuron(neuron_weight) # here we are creating a neuron
+            neuron = IntergrateFireNeuron(neuron_weight, specific_neuron_thresh) # here for the threshold we are accessing the specific neuron we want #the difference here is that IF needs a threshold because it sums the inputs 
             
             if self.weights != False:
                 self.layer_activation.append(neuron.activity_level())
@@ -126,12 +146,13 @@ class Layer:
     
 
 class Network:
-    def __init__(self, number_of_layer, neurons_per_layer, weights, initial_activity):
+    def __init__(self, number_of_layer, neurons_per_layer, weights, initial_activity, neuron_threshold):
         self.number_of_layer = number_of_layer
         self.layers = [] #this will be changing inside. It will be created on itsown. ^^^^^
         self.neurons_per_layer = neurons_per_layer
         self.weights = weights
         self.activations = [initial_activity]
+        self.neuron_threshold = neuron_threshold
         
         
         
@@ -149,7 +170,7 @@ class Network:
                     weights_of_layer.append(result_vector)
 
             
-            layer = Layer(number_of_neurons, weights_of_layer) #this is creating the object layer that takes the number of neurons 
+            layer = Layer(number_of_neurons, weights_of_layer, neuron_threshold) #this is creating the object layer that takes the number of neurons 
             layer.create_neurons()
             
             if i!= 0:
@@ -157,10 +178,12 @@ class Network:
                 
             self.layers.append(layer) # putting every layer that we just created back into self.layers above ^^^^^
         
+        print('This is our activation matrix of the whole Network')
+        print(self.activations)
         return self.activations
         #return self.layers #return is the end of the funciton once all layers are created, it will give you all of the layers
 
-    def winner_takes_all(self ):
+    def winner_takes_all(self):
         #step 1 = get index of the last row - last (always equal to -->) index =  len(object)-1     
         last_row_index = len(self.activations) - 1
         
@@ -170,6 +193,7 @@ class Network:
         
         #step 3 = get the highest value in last row 
         highest_value = max(last_row)
+        return highest_value 
         
         
         
@@ -184,8 +208,11 @@ initial_activity = [0.3, 0.6, 0.5]  #THIS IS INitializing the activity of the ne
 neurons_per_layer = [3,3] #here we have 5 neurons in total in the network, the activity of the neurons in the second layer is changing depending on the activity of the first layer and this is how we are connecting the layers 
 
 
-Network1 = Network(2, neurons_per_layer, weights_matrix, initial_activity) #we've initialized two layers in the network 
+neuron_threshold = [5, 8, 3] #giving the threshold for the second layer of neurons 
+
+Network1 = Network(2, neurons_per_layer, weights_matrix, initial_activity, neuron_threshold) #we've initialized two layers in the network 
 y = Network1.create_layers()
+print('This is the winner take all value in last layer')
 print(Network1.winner_takes_all())
 
 
@@ -196,8 +223,6 @@ print(Network1.winner_takes_all())
 
 
 
-
-# next step is to be able to add more layers from the outside
 
 
         
